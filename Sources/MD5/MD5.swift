@@ -1,10 +1,10 @@
-import Core
 import Essentials
 
-public final class MD5: Hash {
+public final class MD5: StreamingHash {
     public enum Error: Swift.Error {
         case invalidByteCount
         case switchError
+        case noStreamProvided
     }
 
     // MARK - MD5 Specific variables
@@ -30,7 +30,7 @@ public final class MD5: Hash {
     private var c0: UInt32 = 0x98badcfe
     private var d0: UInt32 = 0x10325476
 
-    private let stream: ByteStream
+    private var stream: ByteStream? = nil
     private var digest: [UInt32]
 
     private static let k: [UInt32] = [
@@ -51,14 +51,60 @@ public final class MD5: Hash {
         0x6fa87e4f,0xfe2ce6e0,0xa3014314,0x4e0811a1,
         0xf7537e82,0xbd3af235,0x2ad7d2bb,0xeb86d391
     ]
+    
+    internal init() {
+        digest = []
+    }
+    
+    public var hashedBytes: [UInt8] {
+        var result = [UInt8]()
+        
+        digest.append(a0)
+        digest.append(b0)
+        digest.append(c0)
+        digest.append(d0)
+        
+        digest.forEach { int in
+            result += convert(int)
+        }
+        
+        // return a basic byte stream
+        return result
+    }
 
     // MARK - Hash Protocol
+    
+    public static func hash(_ inputBytes: [UInt8]) throws -> [UInt8] {
+        var bytes = inputBytes + [0x80]
+        var inputBlocks = inputBytes.count / MD5.blockSize
+        
+        if inputBytes.count % MD5.blockSize != 8 {
+            inputBlocks += 1
+            bytes.append(contentsOf: [UInt8](repeating: 0, count: ((inputBlocks * MD5.blockSize) - 8) - bytes.count))
+        }
+        
+        bytes.append(contentsOf: bitLength(of: inputBytes.count, reversed: true))
+        
+        let md5 = MD5()
+        
+        for i in 0..<inputBlocks {
+            let start = i * MD5.blockSize
+            let end = (i+1) * blockSize
+            try md5.process(bytes[start..<end])
+        }
+        
+        return md5.hashedBytes
+    }
 
     /**
         Creates a hashed ByteStream from an input ByteStream
         using the MD5 protocol.
     */
-    public func hash() throws -> ByteStream {
+    public func hash() throws -> [UInt8] {
+        guard let stream = stream else {
+            throw MD5.Error.noStreamProvided
+        }
+        
         var count = 0
         while !stream.closed {
             let slice = try stream.next(MD5.blockSize)
@@ -68,9 +114,9 @@ public final class MD5: Hash {
                 count += bytes.count
                 if bytes.count > MD5.blockSize - 8 {
                     // if the block is slightly too big, just pad and process
-                    bytes = bytes.applyPadding(until: MD5.blockSize)
+                    bytes.append(contentsOf: [UInt8](repeating: 0, count: MD5.blockSize - bytes.count))
 
-                    try process(BytesSlice(bytes))
+                    try process(ArraySlice<UInt8>(bytes))
 
                     // give an empty block for padding
                     bytes = []
@@ -79,9 +125,9 @@ public final class MD5: Hash {
                 // pad and process the last block
                 // adding the bit length
                 bytes.append(0x80)
-                bytes = bytes.applyPadding(until: MD5.blockSize - 8)
-                bytes = bytes.applyBitLength(of: count, reversed: true)
-                try process(BytesSlice(bytes))
+                bytes.append(contentsOf: [UInt8](repeating: 0, count: (MD5.blockSize - 8) - bytes.count))
+                bytes.append(contentsOf: bitLength(of: count, reversed: true))
+                try process(ArraySlice<UInt8>(bytes))
             } else {
                 // if the stream is still open,
                 // process as normal
@@ -92,7 +138,7 @@ public final class MD5: Hash {
 
         // convert the hash into a byte
         // array of results
-        var result: Bytes = []
+        var result = [UInt8]()
 
         digest.append(a0)
         digest.append(b0)
@@ -104,22 +150,22 @@ public final class MD5: Hash {
         }
 
         // return a basic byte stream
-        return BasicByteStream(result)
+        return result
     }
 
     // MARK: Processing
 
-    private func convert(_ int: UInt32) -> Bytes {
+    private func convert(_ int: UInt32) -> [UInt8] {
         let int = int.littleEndian
         return [
-            Byte(int & 0xff),
-            Byte((int >> 8) & 0xff),
-            Byte((int >> 16) & 0xff),
-            Byte((int >> 24) & 0xff)
+            UInt8(int & 0xff),
+            UInt8((int >> 8) & 0xff),
+            UInt8((int >> 16) & 0xff),
+            UInt8((int >> 24) & 0xff)
         ]
     }
 
-    private func process(_ bytes: BytesSlice) throws {
+    private func process(_ bytes: ArraySlice<UInt8>) throws {
         if bytes.count != MD5.blockSize {
             throw Error.invalidByteCount
         }

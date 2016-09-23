@@ -1,7 +1,7 @@
 import XCTest
-import Core
 @testable import SHA1
 import HMAC
+import Essentials
 
 class SHA1Tests: XCTestCase {
     static var allTests = [
@@ -32,23 +32,29 @@ class SHA1Tests: XCTestCase {
             XCTAssertEqual(result, test.expected.lowercased())
         }
         
+        
+        let stream = BasicByteStream([0x31, 0x32, 0x33])
         // Source: https://github.com/krzyzanowskim/CryptoSwift/blob/swift3-snapshots/CryptoSwiftTests/HashTests.swift
         XCTAssertEqual(
-            try SHA1.hash([0x31, 0x32, 0x33]).hexString.lowercased(),
+            try SHA1(stream).hash().hexString.lowercased(),
             "40bd001563085fc35165329ea1ff5c5ecbdbbeef"
         )
     }
     
     func testPerformance() {
-        let data = Bytes(repeating: Byte.A, count: 10_000_000)
+        let data = [UInt8](repeating: 0x61, count: 10_000_000)
 
         // ~0.250 release
         measure {
-            let hasher = SHA1(data)
-            _ = try! hasher.hash()
+            _ = try! SHA1.hash(data)
         }
     }
     
+    func testPerformance2() {
+        measure {
+            _ = try! SHA1.hash("kaas".bytes)
+        }
+    }
 
     func testHMAC() throws {
         let tests: [(key: String, message: String, expected: String)] = [

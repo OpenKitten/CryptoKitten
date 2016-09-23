@@ -15,7 +15,7 @@ public final class PBKDF2<Variant: Hash> {
 
     /// Used to make the block number
     /// Credit to Marcin Krzyzanowski
-    private static func integerBytes(blockNum block: UInt) -> Bytes {
+    private static func integerBytes(blockNum block: UInt32) -> Bytes {
         var bytes = Bytes(repeating: 0, count: 4)
         bytes[0] = Byte((block >> 24) & 0xFF)
         bytes[1] = Byte((block >> 16) & 0xFF)
@@ -25,6 +25,13 @@ public final class PBKDF2<Variant: Hash> {
     }
     
     public static func derive(fromKey key: Bytes, usingSalt salt: Bytes, iterating iterations: Int, keyLength keySize: UInt? = nil) throws -> Bytes {
+        
+        func authenticate(innerPadding: [UInt8], outerPadding: [UInt8], message: [UInt8]) throws -> [UInt8] {
+            let innerPaddingHash: Bytes = try Variant.hash(innerPadding + message)
+            let outerPaddingHash: Bytes = try Variant.hash(outerPadding + innerPaddingHash)
+            
+            return outerPaddingHash
+        }
         
         let keySize = keySize ?? UInt(Variant.blockSize)
         
@@ -44,18 +51,44 @@ public final class PBKDF2<Variant: Hash> {
             throw PBKDF2Error.keySizeTooBig(keySize)
         }
         
-        let blocks = UInt(ceil(Double(keySize) / Double(Variant.blockSize)))
-        var response = Bytes()
+        // MARK - Precalculate paddings
+        var key = key
+        
+        // If it's too long, hash it first
+        if key.count > Variant.blockSize {
+            key = try Variant.hash(key)
+        }
+        
+        // Add padding
+        if key.count < Variant.blockSize {
+            key = key + Bytes(repeating: 0, count: Variant.blockSize - key.count)
+        }
+        
+        // XOR the information
+        var outerPadding = Bytes(repeating: 0x5c, count: Variant.blockSize)
+        var innerPadding = Bytes(repeating: 0x36, count: Variant.blockSize)
+        
+        for i in 0..<key.count {
+            outerPadding[i] = key[i] ^ outerPadding[i]
+        }
+        
+        for i in 0..<key.count {
+            innerPadding[i] = key[i] ^ innerPadding[i]
+        }
+        
+        // MARK - The hashing process
+        let blocks = UInt32(ceil(Double(keySize) / Double(Variant.blockSize)))
+        var response = [UInt8]()
         
         for block in 1...blocks {
             var s = salt
-            s.append(contentsOf: self.integerBytes(blockNum: block))
+            s.append(contentsOf: integerBytes(blockNum: block))
             
-            var ui = try HMAC<Variant>().authenticate(s, key: key)
+            var ui = try authenticate(innerPadding: innerPadding, outerPadding: outerPadding, message: s)
             var u1 = ui
             
             for _ in 0..<iterations - 1 {
-                u1 = try HMAC<Variant>().authenticate(u1, key: key)
+                u1 = try authenticate(innerPadding: innerPadding, outerPadding: outerPadding, message: u1)
                 ui = xor(ui, u1)
             }
             

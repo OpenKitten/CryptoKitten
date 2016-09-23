@@ -1,21 +1,43 @@
-import Core
 import Essentials
+import Core
 
-public final class SHA1: Hash {
+public final class SHA1: StreamingHash {
 
     public enum Error: Swift.Error {
         case invalidByteCount
         case switchError
+        case noStreamProvided
     }
 
     private var h: [UInt32]
-    private var stream: ByteStream
+    private var stream: ByteStream? = nil
+    
+    public var hashedBytes: [UInt8] {
+        var bytes = [UInt8]()
+        
+        h.forEach {
+            let item = $0.bigEndian
+            bytes += [UInt8(item & 0xff), UInt8((item >> 8) & 0xff), UInt8((item >> 16) & 0xff), UInt8((item >> 24) & 0xff)]
+        }
+        
+        return bytes
+    }
 
     /**
         Create a new SHA1 capable of hashing a Stream.
     */
     public init(_ s: ByteStream) {
         stream = s
+        h = [
+            0x67452301,
+            0xEFCDAB89,
+            0x98BADCFE,
+            0x10325476,
+            0xC3D2E1F0
+        ]
+    }
+    
+    internal init() {
         h = [
             0x67452301,
             0xEFCDAB89,
@@ -31,12 +53,38 @@ public final class SHA1: Hash {
         SHA1 uses a block size of 64.
     */
     public static let blockSize = 64
+    
+    public static func hash(_ inputBytes: [UInt8]) throws -> [UInt8] {
+        var bytes = inputBytes + [0x80]
+        var inputBlocks = inputBytes.count / SHA1.blockSize
+        
+        if inputBytes.count % SHA1.blockSize != 8 {
+            inputBlocks += 1
+            bytes.append(contentsOf: [UInt8](repeating: 0, count: ((inputBlocks * SHA1.blockSize) - 8) - bytes.count))
+        }
+        
+        bytes.append(contentsOf: bitLength(of: inputBytes.count, reversed: false))
+        
+        let sha1 = SHA1()
+        
+        for i in 0..<inputBlocks {
+            let start = i * SHA1.blockSize
+            let end = (i+1) * blockSize
+            try sha1.process(bytes[start..<end])
+        }
+        
+        return sha1.hashedBytes
+    }
 
     /**
         Create a hashed ByteStream from an input ByteStream
         using the SHA1 protocol.
     */
-    public func hash() throws -> ByteStream {
+    public func hash() throws -> [UInt8] {
+        guard let stream = stream else {
+            throw SHA1.Error.noStreamProvided
+        }
+        
         var count = 0
         while !stream.closed {
             let slice = try stream.next(SHA1.blockSize)
@@ -45,9 +93,9 @@ public final class SHA1: Hash {
                 var bytes = Array(slice)
                 if bytes.count > SHA1.blockSize - 8 {
                     // if the block is slightly too big, just pad and process
-                    bytes = bytes.applyPadding(until: SHA1.blockSize)
+                    bytes.append(contentsOf: [UInt8](repeating: 0, count: SHA1.blockSize - bytes.count))
 
-                    try process(BytesSlice(bytes))
+                    try process(ArraySlice<UInt8>(bytes))
                     count += bytes.count
 
                     // give an empty block for padding
@@ -60,9 +108,9 @@ public final class SHA1: Hash {
                 // pad and process the last block 
                 // adding the bit length
                 bytes.append(0x80)
-                bytes = bytes.applyPadding(until: SHA1.blockSize - 8)
-                bytes = bytes.applyBitLength(of: count, reversed: false)
-                try process(BytesSlice(bytes))
+                bytes.append(contentsOf: [UInt8](repeating: 0, count: (SHA1.blockSize - 8) - bytes.count))
+                bytes.append(contentsOf: bitLength(of: count, reversed: false))
+                try process(ArraySlice<UInt8>(bytes))
             } else {
                 // if the stream is still open,
                 // process as normal
@@ -71,30 +119,23 @@ public final class SHA1: Hash {
             }
         }
 
-        // convert the hash into a byte
-        // array of results
-        var result: Bytes = []
-        h.forEach { int in
-            result += convert(int)
-        }
-
         // return a basic byte stream
-        return BasicByteStream(result)
+        return hashedBytes
     }
 
     // MARK: Processing
 
-    private func convert(_ int: UInt32) -> Bytes {
+    private func convert(_ int: UInt32) -> [UInt8] {
         let int = int.bigEndian
         return [
-            Byte(int & 0xff),
-            Byte((int >> 8) & 0xff),
-            Byte((int >> 16) & 0xff),
-            Byte((int >> 24) & 0xff)
+            UInt8(int & 0xff),
+            UInt8((int >> 8) & 0xff),
+            UInt8((int >> 16) & 0xff),
+            UInt8((int >> 24) & 0xff)
         ]
     }
 
-    private func process(_ bytes: BytesSlice) throws {
+    private func process(_ bytes: ArraySlice<UInt8>) throws {
         if bytes.count != SHA1.blockSize {
             throw Error.invalidByteCount
         }
@@ -123,24 +164,24 @@ public final class SHA1: Hash {
         var e = h[4]
 
         // Main loop
-        for j in 0..<80 {
+        for j in 0...79 {
             var f: UInt32
             var k: UInt32
 
             switch j {
-            case 0..<20:
+            case 0...19:
                 f = (b & c) | ((~b) & d)
                 k = 0x5A827999
                 break
-            case 20..<40:
+            case 20...39:
                 f = b ^ c ^ d
                 k = 0x6ED9EBA1
                 break
-            case 40..<60:
+            case 40...59:
                 f = (b & c) | (b & d) | (c & d)
                 k = 0x8F1BBCDC
                 break
-            case 60..<80:
+            case 60...79:
                 f = b ^ c ^ d
                 k = 0xCA62C1D6
                 break
@@ -162,5 +203,4 @@ public final class SHA1: Hash {
         h[3] = (h[3] &+ d) & 0xffffffff
         h[4] = (h[4] &+ e) & 0xffffffff
     }
-
 }

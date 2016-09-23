@@ -4,7 +4,7 @@ import Essentials
 /**
     Used to authenticate messages using the `Hash` algorithm
 */
-public class HMAC<Variant: Hash> {
+public class HMAC<Variant: StreamingHash> {
     /**
         Create an HMAC authenticator.
     */
@@ -23,7 +23,7 @@ public class HMAC<Variant: Hash> {
         
         // If it's too long, hash it first
         if key.count > Variant.blockSize {
-            key = try Variant(key).hash()
+            key = try Variant.hash(key)
         }
         
         // Add padding
@@ -35,17 +35,17 @@ public class HMAC<Variant: Hash> {
         var outerPadding = Bytes(repeating: 0x5c, count: Variant.blockSize)
         var innerPadding = Bytes(repeating: 0x36, count: Variant.blockSize)
         
-        for (index, _) in key.enumerated() {
-            outerPadding[index] = key[index] ^ outerPadding[index]
+        for i in 0..<key.count {
+            outerPadding[i] = key[i] ^ outerPadding[i]
         }
         
-        for (index, _) in key.enumerated() {
-            innerPadding[index] = key[index] ^ innerPadding[index]
+        for i in 0..<key.count {
+            innerPadding[i] = key[i] ^ innerPadding[i]
         }
         
         // Hash the information
-        let innerPaddingHash: Bytes = try Variant(innerPadding + message).hash()
-        let outerPaddingHash: Bytes = try Variant(outerPadding + innerPaddingHash).hash()
+        let innerPaddingHash: Bytes = try Variant.hash(innerPadding + message)
+        let outerPaddingHash: Bytes = try Variant.hash(outerPadding + innerPaddingHash)
         
         return outerPaddingHash
     }

@@ -1,5 +1,4 @@
 import XCTest
-import Core
 @testable import PBKDF2
 import SHA1
 import MD5
@@ -92,47 +91,9 @@ class PBKDF2Tests: XCTestCase {
     }
     
     func testPerformance() {
-        let data = Bytes(repeating: Byte.A, count: 10_000_000)
-
-        // ~0.250 release
+        // ~0.137 release
         measure {
-            let hasher = SHA1(data)
-            _ = try! hasher.hash()
+            _ = try! PBKDF2<SHA1>.derive(fromKey: "p".bytes, usingSalt: "somewhatlongsaltstringthatIwanttotest".bytes, iterating: 10_000)
         }
     }
-    
-
-    func testHMAC() throws {
-        let tests: [(key: String, message: String, expected: String)] = [
-            (
-                "vapor",
-                "hello",
-                "bb2a9aabb537902647f3f40bfecb679bf0d7d64b"
-            ),
-            (
-                "true",
-                "2+2=4",
-                "35836a9520eb061ad7e267ac37ab3ee1fafa6e4b"
-            )
-        ]
-        
-        for (i, test) in tests.enumerated() {
-            do {
-                let result = try HMAC<SHA1>().authenticate(
-                    test.message.bytes,
-                    key: test.key.bytes
-                ).hexString.lowercased()
-                XCTAssertEqual(result, test.expected.lowercased())
-            } catch {
-                XCTFail("Test \(i) failed: \(error)")
-            }
-        }
-        
-        // Source: https://github.com/krzyzanowskim/CryptoSwift/blob/swift3-snapshots/CryptoSwiftTests/HMACTests.swift
-        XCTAssertEqual(
-            try HMAC<SHA1>().authenticate([], key: []),
-            [0xfb,0xdb,0x1d,0x1b,0x18,0xaa,0x6c,0x08,0x32,0x4b,0x7d,0x64,0xb7,0x1f,0xb7,0x63,0x70,0x69,0x0e,0x1d]
-        )
-    }
-
 }

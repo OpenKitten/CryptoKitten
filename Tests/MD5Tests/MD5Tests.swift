@@ -28,10 +28,9 @@ class MD5Tests: XCTestCase {
     func testPerformance() {
         let data = Bytes(repeating: Byte.A, count: 10_000_000)
 
-        // ~0.150 release
+        // ~0.121 release
         measure {
-            let hasher = MD5(data)
-            _ = try! hasher.hash()
+            _ = try! MD5.hash(data)
         }
     }
 
