@@ -1,6 +1,3 @@
-import Essentials
-import Core
-
 public final class SHA1: StreamingHash {
 
     public enum Error: Swift.Error {

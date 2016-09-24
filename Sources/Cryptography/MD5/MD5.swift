@@ -1,5 +1,3 @@
-import Essentials
-
 public final class MD5: StreamingHash {
     public enum Error: Swift.Error {
         case invalidByteCount

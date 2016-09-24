@@ -1,10 +1,7 @@
-import Core
-import Essentials
-
 /**
-    Used to authenticate messages using the `Hash` algorithm
+    Used to authenticate messages using the `Variant` algorithm
 */
-public class HMAC<Variant: StreamingHash> {
+public class HMAC<Variant: Hash> {
     /**
         Create an HMAC authenticator.
     */
@@ -18,7 +15,7 @@ public class HMAC<Variant: StreamingHash> {
 
         - returns: The authenticated message
     */
-    public func authenticate(_ message: Bytes, key: Bytes) throws -> Bytes {
+    public static func authenticate(_ message: [UInt8], key: [UInt8]) throws -> [UInt8] {
         var key = key
         
         // If it's too long, hash it first
@@ -28,12 +25,12 @@ public class HMAC<Variant: StreamingHash> {
         
         // Add padding
         if key.count < Variant.blockSize {
-            key = key + Bytes(repeating: 0, count: Variant.blockSize - key.count)
+            key = key + [UInt8](repeating: 0, count: Variant.blockSize - key.count)
         }
         
         // XOR the information
-        var outerPadding = Bytes(repeating: 0x5c, count: Variant.blockSize)
-        var innerPadding = Bytes(repeating: 0x36, count: Variant.blockSize)
+        var outerPadding = [UInt8](repeating: 0x5c, count: Variant.blockSize)
+        var innerPadding = [UInt8](repeating: 0x36, count: Variant.blockSize)
         
         for i in 0..<key.count {
             outerPadding[i] = key[i] ^ outerPadding[i]
@@ -44,8 +41,8 @@ public class HMAC<Variant: StreamingHash> {
         }
         
         // Hash the information
-        let innerPaddingHash: Bytes = try Variant.hash(innerPadding + message)
-        let outerPaddingHash: Bytes = try Variant.hash(outerPadding + innerPaddingHash)
+        let innerPaddingHash: [UInt8] = try Variant.hash(innerPadding + message)
+        let outerPaddingHash: [UInt8] = try Variant.hash(outerPadding + innerPaddingHash)
         
         return outerPaddingHash
     }

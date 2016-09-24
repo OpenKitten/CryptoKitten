@@ -45,9 +45,7 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
 
-import Core
 import Foundation
-import Random
 
 public class BCrypt {
     static let P_orig : [UInt32] = [
@@ -346,7 +344,7 @@ public class BCrypt {
         return BCrypt.generateSaltWithNumberOfRounds(rounds: 10)
     }
     
-    public static func derive(fromKey key: Bytes, withSalt salt: Bytes, rounds: UInt) throws -> Bytes {
+    public static func derive(fromKey key: [UInt8], withSalt salt: [UInt8], rounds: UInt) throws -> [UInt8] {
         let key = key.map {
             Int8(bitPattern: $0)
         }
@@ -356,13 +354,13 @@ public class BCrypt {
         }
         
         return try BCrypt().hashPassword(key, withSalt: salt, cost: Int(rounds)).map {
-            Byte(bitPattern: $0)
+            UInt8(bitPattern: $0)
         }
     }
     
-    public static func derive(fromKey key: String, withSalt salt: Bytes, rounds: UInt) throws -> Bytes {
+    public static func derive(fromKey key: String, withSalt salt: [UInt8], rounds: UInt) throws -> [UInt8] {
         let keyPreEncoding = key + "\0"
-        let key: [Int8] = Bytes(keyPreEncoding.utf8).map {
+        let key: [Int8] = [UInt8](keyPreEncoding.utf8).map {
             Int8(bitPattern: $0)
         }
         
@@ -371,7 +369,7 @@ public class BCrypt {
         }
         
         return try BCrypt().hashPassword(key, withSalt: salt, cost: Int(rounds)).map {
-            Byte(bitPattern: $0)
+            UInt8(bitPattern: $0)
         }
     }
     
@@ -447,7 +445,7 @@ public class BCrypt {
             passwordPreEncoding += "\0"
         }
         
-        let passwordData: [Int8] = Bytes(passwordPreEncoding.utf8).map {
+        let passwordData: [Int8] = [UInt8](passwordPreEncoding.utf8).map {
             Int8(bitPattern: $0)
         }
         

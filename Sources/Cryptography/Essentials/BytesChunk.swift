@@ -1,7 +1,5 @@
-import Core
-
 public class Chunks: Sequence {
-    var remainder = Bytes()
+    var remainder = [UInt8]()
     let chunkSize: Int
     private var _count = 0
     
@@ -13,22 +11,22 @@ public class Chunks: Sequence {
         self.chunkSize = chunkSize
     }
     
-    public func append(_ byte: Byte) {
+    public func append(_ byte: UInt8) {
         remainder += [byte]
         _count += 1
     }
     
-    public func append(bytes: Bytes) {
+    public func append(bytes: [UInt8]) {
         remainder += bytes
         _count += bytes.count
     }
     
-    public func append(bytes: BytesSlice) {
+    public func append(bytes: ArraySlice<UInt8>) {
         remainder += bytes
         _count += bytes.count
     }
     
-    public func makeIterator() -> AnyIterator<Bytes> {
+    public func makeIterator() -> AnyIterator<[UInt8]> {
         return AnyIterator {
             guard self.remainder.count >= self.chunkSize else {
                 return nil

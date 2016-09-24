@@ -1,7 +1,5 @@
 import XCTest
-import Core
-@testable import MD5
-import HMAC
+import Cryptography
 
 class MD5Tests: XCTestCase {
     static var allTests = [
@@ -20,13 +18,13 @@ class MD5Tests: XCTestCase {
         ]
         
         for test in tests {
-            let result = try MD5.hash(test.0.bytes).hexString.lowercased()
+            let result = try MD5.hash([UInt8](test.0.utf8)).hexString.lowercased()
             XCTAssertEqual(result, test.1.lowercased())
         }
     }
 
     func testPerformance() {
-        let data = Bytes(repeating: Byte.A, count: 10_000_000)
+        let data = [UInt8](repeating: 0x63, count: 10_000_000)
 
         // ~0.121 release
         measure {
@@ -51,9 +49,9 @@ class MD5Tests: XCTestCase {
 
         for (i, test) in tests.enumerated() {
             do {
-                let result = try HMAC<MD5>().authenticate(
-                    test.message.bytes,
-                    key: test.key.bytes
+                let result = try HMAC<MD5>.authenticate(
+                    [UInt8](test.message.utf8),
+                    key: [UInt8](test.key.utf8)
                 ).hexString.lowercased()
                 XCTAssertEqual(result, test.expected.lowercased())
             } catch {

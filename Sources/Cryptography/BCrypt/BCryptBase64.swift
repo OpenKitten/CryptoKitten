@@ -1,5 +1,3 @@
-import Core
-
 extension BCrypt {
     internal struct Base64 {
         /// BCrypt specific Base64 encoding table
@@ -42,12 +40,12 @@ extension BCrypt {
             }
             
             var offset: Int = 0
-            var c1: Byte
-            var c2: Byte
+            var c1: UInt8
+            var c2: UInt8
             var result: String = String()
             
-            var dataArray : Bytes = data.map {
-                Byte(bitPattern: $0)
+            var dataArray : [UInt8] = data.map {
+                UInt8(bitPattern: $0)
             }
             
             // Encode until we've reached the specified length

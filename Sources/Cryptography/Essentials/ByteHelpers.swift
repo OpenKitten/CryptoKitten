@@ -1,5 +1,4 @@
 import Foundation
-import Core
 
 public protocol SequenceInitializable: Sequence {
     init(_ sequence: [Iterator.Element])
@@ -10,16 +9,16 @@ public protocol SequenceInitializable: Sequence {
 
     Move to vapor/core
 */
-extension SequenceInitializable where Iterator.Element == Byte {
+extension SequenceInitializable where Iterator.Element == UInt8 {
     
     public init(hexString: String) {
-        var data = Bytes()
+        var data = [UInt8]()
         
         var gen = hexString.characters.makeIterator()
         while let c1 = gen.next(), let c2 = gen.next() {
             let s = String([c1, c2])
             
-            guard let d = Byte(s, radix: 16) else {
+            guard let d = UInt8(s, radix: 16) else {
                 break
             }
             
@@ -30,7 +29,7 @@ extension SequenceInitializable where Iterator.Element == Byte {
     }
 }
 
-extension Sequence where Iterator.Element == Byte {
+extension Sequence where Iterator.Element == UInt8 {
     public var hexString: String {
         #if os(Linux)
             return self.lazy.reduce("") { $0 + (NSString(format:"%02x", $1).description) }
@@ -42,7 +41,7 @@ extension Sequence where Iterator.Element == Byte {
     }
 }
 
-public func bitLength(of length: Int, reversed: Bool = true) -> Bytes {
+public func bitLength(of length: Int, reversed: Bool = true) -> [UInt8] {
     let lengthBytes = arrayOfBytes(length * 8, length: 8)
     
     return reversed ? lengthBytes.reversed() : lengthBytes
