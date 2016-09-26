@@ -30,11 +30,6 @@ class PBKDF2Tests: XCTestCase {
             XCTAssertEqual(result, test.expected.lowercased())
         }
     }
-    
-    func testSHA2() {
-        let hash = SHA256.hash([UInt8]("The quick brown fox jumps over the lazy dog".utf8)).hexString.lowercased()
-        XCTAssertEqual(hash, "730e109bd7a8a32b1cb9d9a09aa2325d2430587ddbc0c38bad911525")
-    }
 
     func testMD5() throws {
         // Source: PHP/produce_tests.php

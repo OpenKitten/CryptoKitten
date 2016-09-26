@@ -26,7 +26,7 @@ class SHA1Tests: XCTestCase {
         ]
         
         for test in tests {
-            let result = try SHA1.hash([UInt8](test.key.utf8)).hexString.lowercased()
+            let result = SHA1.hash([UInt8](test.key.utf8)).hexString.lowercased()
             XCTAssertEqual(result, test.expected.lowercased())
         }
         
@@ -44,13 +44,13 @@ class SHA1Tests: XCTestCase {
 
         // ~0.250 release
         measure {
-            _ = try! SHA1.hash(data)
+            _ = SHA1.hash(data)
         }
     }
     
     func testPerformance2() {
         measure {
-            _ = try! SHA1.hash([UInt8]("kaas".utf8))
+            _ = SHA1.hash([UInt8]("kaas".utf8))
         }
     }
 

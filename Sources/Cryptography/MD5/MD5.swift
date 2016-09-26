@@ -159,7 +159,7 @@ public final class MD5: StreamingHash {
             fatalError("MD5 internal error - invalid block provided with size \(bytes.count)")
         }
 
-        var chunk: [UInt32] = toUInt32Array(bytes)
+        var chunk: [UInt32] = makeUInt32Array(bytes)
 
         var a = a0
         var b = b0

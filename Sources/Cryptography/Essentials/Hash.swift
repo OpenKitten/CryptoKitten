@@ -8,3 +8,9 @@ public protocol StreamingHash: Hash {
     init(_ stream: ByteStream)
     func hash() throws -> [UInt8]
 }
+
+public enum HashError: Swift.Error {
+    case invalidByteCount
+    case switchError
+    case noStreamProvided
+}

@@ -18,7 +18,7 @@ class MD5Tests: XCTestCase {
         ]
         
         for test in tests {
-            let result = try MD5.hash([UInt8](test.0.utf8)).hexString.lowercased()
+            let result = MD5.hash([UInt8](test.0.utf8)).hexString.lowercased()
             XCTAssertEqual(result, test.1.lowercased())
         }
     }
@@ -28,7 +28,7 @@ class MD5Tests: XCTestCase {
 
         // ~0.121 release
         measure {
-            _ = try! MD5.hash(data)
+            _ = MD5.hash(data)
         }
     }
 

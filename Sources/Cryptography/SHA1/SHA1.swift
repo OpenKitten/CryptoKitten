@@ -1,21 +1,14 @@
 public final class SHA1: StreamingHash {
-
-    public enum Error: Swift.Error {
-        case invalidByteCount
-        case switchError
-        case noStreamProvided
-    }
-
-    private var h: [UInt32]
+    private var hashCode: [UInt32]
     private var stream: ByteStream? = nil
     
     public var hashedBytes: [UInt8] {
         var bytes = [UInt8]()
         
-        h.forEach {
+        for hashPart in hashCode {
             // Big Endian is required
-            let item = $0.bigEndian
-            bytes += [UInt8(item & 0xff), UInt8((item >> 8) & 0xff), UInt8((item >> 16) & 0xff), UInt8((item >> 24) & 0xff)]
+            let hashPart = hashPart.bigEndian
+            bytes += [UInt8(hashPart & 0xff), UInt8((hashPart >> 8) & 0xff), UInt8((hashPart >> 16) & 0xff), UInt8((hashPart >> 24) & 0xff)]
         }
         
         return bytes
@@ -26,7 +19,7 @@ public final class SHA1: StreamingHash {
     */
     public init(_ s: ByteStream) {
         stream = s
-        h = [
+        hashCode = [
             0x67452301,
             0xEFCDAB89,
             0x98BADCFE,
@@ -36,7 +29,7 @@ public final class SHA1: StreamingHash {
     }
     
     internal init() {
-        h = [
+        hashCode = [
             0x67452301,
             0xEFCDAB89,
             0x98BADCFE,
@@ -80,7 +73,7 @@ public final class SHA1: StreamingHash {
     */
     public func hash() throws -> [UInt8] {
         guard let stream = stream else {
-            throw SHA1.Error.noStreamProvided
+            throw HashError.noStreamProvided
         }
         
         var count = 0
@@ -146,7 +139,7 @@ public final class SHA1: StreamingHash {
             switch j {
             // break chunk into sixteen 4-byte big-endian words
             case 0..<16:
-                w[j] = toUInt32(bytes, from: index).bigEndian
+                w[j] = UInt32(bytes, fromIndex: index).bigEndian
                 index = bytes.index(index, offsetBy: 4)
             // Extend the sixteen 32-bit words into eighty 32-bit words:
             default:
@@ -155,11 +148,11 @@ public final class SHA1: StreamingHash {
             }
         }
 
-        var a = h[0]
-        var b = h[1]
-        var c = h[2]
-        var d = h[3]
-        var e = h[4]
+        var a = hashCode[0]
+        var b = hashCode[1]
+        var c = hashCode[2]
+        var d = hashCode[3]
+        var e = hashCode[4]
 
         // Main loop
         for i in 0...79 {
@@ -195,10 +188,12 @@ public final class SHA1: StreamingHash {
             a = temp
         }
 
-        h[0] = (h[0] &+ a) & 0xffffffff
-        h[1] = (h[1] &+ b) & 0xffffffff
-        h[2] = (h[2] &+ c) & 0xffffffff
-        h[3] = (h[3] &+ d) & 0xffffffff
-        h[4] = (h[4] &+ e) & 0xffffffff
+        hashCode = [
+            (hashCode[0] &+ a) & 0xffffffff,
+            (hashCode[1] &+ b) & 0xffffffff,
+            (hashCode[2] &+ c) & 0xffffffff,
+            (hashCode[3] &+ d) & 0xffffffff,
+            (hashCode[4] &+ e) & 0xffffffff
+        ]
     }
 }
