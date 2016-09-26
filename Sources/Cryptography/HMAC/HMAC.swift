@@ -20,7 +20,7 @@ public class HMAC<Variant: Hash> {
         
         // If it's too long, hash it first
         if key.count > Variant.blockSize {
-            key = try Variant.hash(key)
+            key = Variant.hash(key)
         }
         
         // Add padding
@@ -41,8 +41,8 @@ public class HMAC<Variant: Hash> {
         }
         
         // Hash the information
-        let innerPaddingHash: [UInt8] = try Variant.hash(innerPadding + message)
-        let outerPaddingHash: [UInt8] = try Variant.hash(outerPadding + innerPaddingHash)
+        let innerPaddingHash: [UInt8] = Variant.hash(innerPadding + message)
+        let outerPaddingHash: [UInt8] = Variant.hash(outerPadding + innerPaddingHash)
         
         return outerPaddingHash
     }

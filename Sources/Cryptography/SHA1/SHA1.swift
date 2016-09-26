@@ -13,6 +13,7 @@ public final class SHA1: StreamingHash {
         var bytes = [UInt8]()
         
         h.forEach {
+            // Big Endian is required
             let item = $0.bigEndian
             bytes += [UInt8(item & 0xff), UInt8((item >> 8) & 0xff), UInt8((item >> 16) & 0xff), UInt8((item >> 24) & 0xff)]
         }
@@ -51,13 +52,13 @@ public final class SHA1: StreamingHash {
     */
     public static let blockSize = 64
     
-    public static func hash(_ inputBytes: [UInt8]) throws -> [UInt8] {
+    public static func hash(_ inputBytes: [UInt8]) -> [UInt8] {
         var bytes = inputBytes + [0x80]
-        var inputBlocks = inputBytes.count / SHA1.blockSize
+        var inputBlocks = inputBytes.count / blockSize
         
-        if inputBytes.count % SHA1.blockSize != 8 {
+        if inputBytes.count % blockSize != 8 {
             inputBlocks += 1
-            bytes.append(contentsOf: [UInt8](repeating: 0, count: ((inputBlocks * SHA1.blockSize) - 8) - bytes.count))
+            bytes.append(contentsOf: [UInt8](repeating: 0, count: ((inputBlocks * blockSize) - 8) - bytes.count))
         }
         
         bytes.append(contentsOf: bitLength(of: inputBytes.count, reversed: false))
@@ -65,9 +66,9 @@ public final class SHA1: StreamingHash {
         let sha1 = SHA1()
         
         for i in 0..<inputBlocks {
-            let start = i * SHA1.blockSize
+            let start = i * blockSize
             let end = (i+1) * blockSize
-            try sha1.process(bytes[start..<end])
+            sha1.process(bytes[start..<end])
         }
         
         return sha1.hashedBytes
@@ -92,7 +93,7 @@ public final class SHA1: StreamingHash {
                     // if the block is slightly too big, just pad and process
                     bytes.append(contentsOf: [UInt8](repeating: 0, count: SHA1.blockSize - bytes.count))
 
-                    try process(ArraySlice<UInt8>(bytes))
+                    process(ArraySlice<UInt8>(bytes))
                     count += bytes.count
 
                     // give an empty block for padding
@@ -107,11 +108,11 @@ public final class SHA1: StreamingHash {
                 bytes.append(0x80)
                 bytes.append(contentsOf: [UInt8](repeating: 0, count: (SHA1.blockSize - 8) - bytes.count))
                 bytes.append(contentsOf: bitLength(of: count, reversed: false))
-                try process(ArraySlice<UInt8>(bytes))
+                process(ArraySlice<UInt8>(bytes))
             } else {
                 // if the stream is still open,
                 // process as normal
-                try process(slice)
+                process(slice)
                 count += SHA1.blockSize
             }
         }
@@ -132,9 +133,9 @@ public final class SHA1: StreamingHash {
         ]
     }
 
-    private func process(_ bytes: ArraySlice<UInt8>) throws {
+    private func process(_ bytes: ArraySlice<UInt8>) {
         if bytes.count != SHA1.blockSize {
-            throw Error.invalidByteCount
+            fatalError("SHA1 internal error - invalid block provided with size \(bytes.count)")
         }
 
         var w = [UInt32](repeating: 0, count: 80)
@@ -161,11 +162,11 @@ public final class SHA1: StreamingHash {
         var e = h[4]
 
         // Main loop
-        for j in 0...79 {
+        for i in 0...79 {
             var f: UInt32
             var k: UInt32
 
-            switch j {
+            switch i {
             case 0...19:
                 f = (b & c) | ((~b) & d)
                 k = 0x5A827999
@@ -183,10 +184,10 @@ public final class SHA1: StreamingHash {
                 k = 0xCA62C1D6
                 break
             default:
-                throw Error.switchError
+                fatalError("Impossible switch")
             }
 
-            let temp = (leftRotate(a, count: 5) &+ f &+ e &+ w[j] &+ k) & 0xffffffff
+            let temp = (leftRotate(a, count: 5) &+ f &+ e &+ w[i] &+ k) & 0xffffffff
             e = d
             d = c
             c = leftRotate(b, count: 30)

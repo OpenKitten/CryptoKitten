@@ -1,7 +1,7 @@
 public protocol Hash {
     static var blockSize: Int { get }
     
-    static func hash(_ bytes: [UInt8]) throws -> [UInt8]
+    static func hash(_ bytes: [UInt8]) -> [UInt8]
 }
 
 public protocol StreamingHash: Hash {

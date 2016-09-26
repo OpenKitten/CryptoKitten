@@ -23,15 +23,17 @@ public final class PBKDF2<Variant: Hash> {
     
     public static func derive(fromKey key: [UInt8], usingSalt salt: [UInt8], iterating iterations: Int, keyLength keySize: UInt? = nil) throws -> [UInt8] {
         
+        // Authenticated using HMAC with precalculated keys (saves 50% performance)
         func authenticate(innerPadding: [UInt8], outerPadding: [UInt8], message: [UInt8]) throws -> [UInt8] {
-            let innerPaddingHash: [UInt8] = try Variant.hash(innerPadding + message)
-            let outerPaddingHash: [UInt8] = try Variant.hash(outerPadding + innerPaddingHash)
+            let innerPaddingHash: [UInt8] = Variant.hash(innerPadding + message)
+            let outerPaddingHash: [UInt8] = Variant.hash(outerPadding + innerPaddingHash)
             
             return outerPaddingHash
         }
         
         let keySize = keySize ?? UInt(Variant.blockSize)
         
+        // Check input values to be correct
         guard iterations > 0 else {
             throw PBKDF2Error.cannotIterateZeroTimes
         }
@@ -53,7 +55,7 @@ public final class PBKDF2<Variant: Hash> {
         
         // If it's too long, hash it first
         if key.count > Variant.blockSize {
-            key = try Variant.hash(key)
+            key = Variant.hash(key)
         }
         
         // Add padding
@@ -77,17 +79,21 @@ public final class PBKDF2<Variant: Hash> {
         let blocks = UInt32(ceil(Double(keySize) / Double(Variant.blockSize)))
         var response = [UInt8]()
         
+        // Loop over all blocks
         for block in 1...blocks {
             let s = salt + integerBytes(blockNum: block)
             
+            // Iterate the first time
             var ui = try authenticate(innerPadding: innerPadding, outerPadding: outerPadding, message: s)
             var u1 = ui
             
+            // Continue iterating for this block
             for _ in 0..<iterations - 1 {
                 u1 = try authenticate(innerPadding: innerPadding, outerPadding: outerPadding, message: u1)
                 ui = xor(ui, u1)
             }
             
+            // Append the response to be returned
             response.append(contentsOf: ui)
         }
         
