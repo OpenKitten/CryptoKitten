@@ -47,10 +47,14 @@ public final class SHA1: StreamingHash {
     
     public static func hash(_ inputBytes: [UInt8]) -> [UInt8] {
         var bytes = inputBytes + [0x80]
-        var inputBlocks = inputBytes.count / blockSize
+        let remainingBytes = blockSize - (bytes.count % blockSize)
+        var inputBlocks = (bytes.count / blockSize) + (remainingBytes == blockSize - 8 ? 0 : 1)
         
-        if inputBytes.count % blockSize != 8 {
-            inputBlocks += 1
+        if remainingBytes != 8 {
+            if remainingBytes < 8 {
+                inputBlocks += 1
+            }
+            
             bytes.append(contentsOf: [UInt8](repeating: 0, count: ((inputBlocks * blockSize) - 8) - bytes.count))
         }
         
@@ -60,7 +64,7 @@ public final class SHA1: StreamingHash {
         
         for i in 0..<inputBlocks {
             let start = i * blockSize
-            let end = (i+1) * blockSize
+            let end = (i + 1) * blockSize
             sha1.process(bytes[start..<end])
         }
         

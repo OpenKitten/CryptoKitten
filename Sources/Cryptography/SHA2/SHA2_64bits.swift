@@ -114,8 +114,12 @@ public final class SHA384: SHA2_64bits {
         var bytes = inputBytes + [0x80]
         var inputBlocks = inputBytes.count / blockSize
         
-        if inputBytes.count % blockSize != 8 {
+        if inputBytes.count % blockSize != blockSize - 8 {
             inputBlocks += 1
+            if inputBytes.count % blockSize > blockSize - 8 {
+                inputBlocks += 1
+            }
+            
             bytes.append(contentsOf: [UInt8](repeating: 0, count: ((inputBlocks * blockSize) - 8) - bytes.count))
         }
         
@@ -227,8 +231,12 @@ public final class SHA512: SHA2_64bits {
         var bytes = inputBytes + [0x80]
         var inputBlocks = inputBytes.count / blockSize
         
-        if inputBytes.count % blockSize != 8 {
+        if inputBytes.count % blockSize != blockSize - 8 {
             inputBlocks += 1
+            if inputBytes.count % blockSize > blockSize - 8 {
+                inputBlocks += 1
+            }
+            
             bytes.append(contentsOf: [UInt8](repeating: 0, count: ((inputBlocks * blockSize) - 8) - bytes.count))
         }
         

@@ -3,14 +3,14 @@ public protocol ByteStream {
     func next(_ max: Int) throws -> ArraySlice<UInt8>
 }
 
+public enum ByteStreamError: Swift.Error {
+    case closed
+}
+
 public final class BasicByteStream: ByteStream {
     let bytes: [UInt8]
     var index: Int
-
-    public enum Error: Swift.Error {
-        case closed
-    }
-
+    
     public var closed: Bool
 
     public init(_ bytes: [UInt8]) {
@@ -21,7 +21,7 @@ public final class BasicByteStream: ByteStream {
 
     public func next(_ max: Int) throws -> ArraySlice<UInt8> {
         guard !closed else {
-            throw Error.closed
+            throw ByteStreamError.closed
         }
 
         var max = max

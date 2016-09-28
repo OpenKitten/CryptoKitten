@@ -23,13 +23,28 @@ class SHA1Tests: XCTestCase {
                 "",
                 "da39a3ee5e6b4b0d3255bfef95601890afd80709"
             ),
+            (
+                "abc",
+                "A9993E364706816ABA3E25717850C26C9CD0D89D"
+            ),
+            (
+                "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+                "84983E441C3BD26EBAAE4AA1F95129E5E54670F1"
+            ),
+            (
+                "a",
+                "86f7e437faa5a7fce15d1ddcb9eaeaea377667b8"
+            ),
+            (
+                "0123456701234567012345670123456701234567012345670123456701234567",
+                "e0c094e867ef46c350ef54a7f59dd60bed92ae83"
+            )
         ]
         
         for test in tests {
             let result = SHA1.hash([UInt8](test.key.utf8)).hexString.lowercased()
             XCTAssertEqual(result, test.expected.lowercased())
         }
-        
         
         let stream = BasicByteStream([0x31, 0x32, 0x33])
         // Source: https://github.com/krzyzanowskim/CryptoSwift/blob/swift3-snapshots/CryptoSwiftTests/HashTests.swift
@@ -40,15 +55,6 @@ class SHA1Tests: XCTestCase {
     }
     
     func testPerformance() {
-        let data = [UInt8](repeating: 0x61, count: 10_000_000)
-
-        // ~0.250 release
-        measure {
-            _ = SHA1.hash(data)
-        }
-    }
-    
-    func testPerformance2() {
         measure {
             _ = SHA1.hash([UInt8]("kaas".utf8))
         }

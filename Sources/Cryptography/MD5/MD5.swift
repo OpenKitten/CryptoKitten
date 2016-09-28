@@ -86,8 +86,12 @@ public final class MD5: StreamingHash {
         var inputBlocks = inputBytes.count / blockSize
         
         // We need to end up with 8 remaining bytes to make a full block
-        if inputBytes.count % blockSize != 8 {
+        if inputBytes.count % blockSize != blockSize - 8 {
             inputBlocks += 1
+            if inputBytes.count % blockSize > blockSize - 8 {
+                inputBlocks += 1
+            }
+            
             bytes.append(contentsOf: [UInt8](repeating: 0, count: ((inputBlocks * blockSize) - 8) - bytes.count))
         }
         
