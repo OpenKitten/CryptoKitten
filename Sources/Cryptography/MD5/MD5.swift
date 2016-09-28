@@ -53,28 +53,6 @@ public final class MD5: StreamingHash {
     internal init() {
         digest = []
     }
-    
-    public var hashedBytes: [UInt8] {
-        // Converts an UInt32 to [UInt8] as littleEndian
-        func convert(_ int: UInt32) -> [UInt8] {
-            let int = int.littleEndian
-            return [
-                UInt8(int & 0xff),
-                UInt8((int >> 8) & 0xff),
-                UInt8((int >> 16) & 0xff),
-                UInt8((int >> 24) & 0xff)
-            ]
-        }
-        
-        var result = [UInt8]()
-        
-        result.append(contentsOf: convert(a0))
-        result.append(contentsOf: convert(b0))
-        result.append(contentsOf: convert(c0))
-        result.append(contentsOf: convert(d0))
-        
-        return result
-    }
 
     // MARK - Hash Protocol
     
@@ -109,8 +87,25 @@ public final class MD5: StreamingHash {
             md5.process(bytes[start..<end])
         }
         
-        // Return the hashed bytes
-        return md5.hashedBytes
+        // Converts an UInt32 to [UInt8] as littleEndian
+        func convert(_ int: UInt32) -> [UInt8] {
+            let int = int.littleEndian
+            return [
+                UInt8(int & 0xff),
+                UInt8((int >> 8) & 0xff),
+                UInt8((int >> 16) & 0xff),
+                UInt8((int >> 24) & 0xff)
+            ]
+        }
+        
+        var result = [UInt8]()
+        
+        result.append(contentsOf: convert(md5.a0))
+        result.append(contentsOf: convert(md5.b0))
+        result.append(contentsOf: convert(md5.c0))
+        result.append(contentsOf: convert(md5.d0))
+        
+        return result
     }
 
     /**
@@ -153,7 +148,25 @@ public final class MD5: StreamingHash {
             }
         }
 
-        return self.hashedBytes
+        // Converts an UInt32 to [UInt8] as littleEndian
+        func convert(_ int: UInt32) -> [UInt8] {
+            let int = int.littleEndian
+            return [
+                UInt8(int & 0xff),
+                UInt8((int >> 8) & 0xff),
+                UInt8((int >> 16) & 0xff),
+                UInt8((int >> 24) & 0xff)
+            ]
+        }
+        
+        var result = [UInt8]()
+        
+        result.append(contentsOf: convert(a0))
+        result.append(contentsOf: convert(b0))
+        result.append(contentsOf: convert(c0))
+        result.append(contentsOf: convert(d0))
+        
+        return result
     }
     
     // MARK: Processing

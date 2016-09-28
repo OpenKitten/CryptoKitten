@@ -2,18 +2,6 @@ public final class SHA1: StreamingHash {
     private var hashCode: [UInt32]
     private var stream: ByteStream? = nil
     
-    public var hashedBytes: [UInt8] {
-        var bytes = [UInt8]()
-        
-        for hashPart in hashCode {
-            // Big Endian is required
-            let hashPart = hashPart.bigEndian
-            bytes += [UInt8(hashPart & 0xff), UInt8((hashPart >> 8) & 0xff), UInt8((hashPart >> 16) & 0xff), UInt8((hashPart >> 24) & 0xff)]
-        }
-        
-        return bytes
-    }
-
     /**
         Create a new SHA1 capable of hashing a Stream.
     */
@@ -68,7 +56,16 @@ public final class SHA1: StreamingHash {
             sha1.process(bytes[start..<end])
         }
         
-        return sha1.hashedBytes
+        // return a basic byte stream
+        var resultBytes = [UInt8]()
+        
+        for hashPart in sha1.hashCode {
+            // Big Endian is required
+            let hashPart = hashPart.bigEndian
+            resultBytes += [UInt8(hashPart & 0xff), UInt8((hashPart >> 8) & 0xff), UInt8((hashPart >> 16) & 0xff), UInt8((hashPart >> 24) & 0xff)]
+        }
+        
+        return resultBytes
     }
 
     /**
@@ -115,7 +112,15 @@ public final class SHA1: StreamingHash {
         }
 
         // return a basic byte stream
-        return hashedBytes
+        var resultBytes = [UInt8]()
+        
+        for hashPart in hashCode {
+            // Big Endian is required
+            let hashPart = hashPart.bigEndian
+            resultBytes += [UInt8(hashPart & 0xff), UInt8((hashPart >> 8) & 0xff), UInt8((hashPart >> 16) & 0xff), UInt8((hashPart >> 24) & 0xff)]
+        }
+        
+        return resultBytes
     }
 
     // MARK: Processing

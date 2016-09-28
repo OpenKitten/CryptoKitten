@@ -29,6 +29,15 @@ extension UInt32 {
         
         self = val0 | val1 | val2 | val3
     }
+    
+    init(_ data: [UInt8]) {
+        let val0 = UInt32(data[3]) << 24
+        let val1 = UInt32(data[2]) << 16
+        let val2 = UInt32(data[1]) << 8
+        let val3 = UInt32(data[0])
+        
+        self = val0 | val1 | val2 | val3
+    }
 }
 
 func makeUInt32Array(_ slice: ArraySlice<UInt8>) -> [UInt32] {

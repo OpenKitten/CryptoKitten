@@ -120,7 +120,15 @@ public final class SHA224: SHA2_32bits {
             sha2.process(bytes[start..<end])
         }
         
-        return sha2.hashedBytes
+        var resultBytes = [UInt8]()
+        
+        for hashPart in sha2.hashCode[0...6] {
+            // Big Endian is required
+            let hashPart = hashPart.bigEndian
+            resultBytes += [UInt8(hashPart & 0xff), UInt8((hashPart >> 8) & 0xff), UInt8((hashPart >> 16) & 0xff), UInt8((hashPart >> 24) & 0xff)]
+        }
+        
+        return resultBytes
     }
     
     public func hash() throws -> [UInt8] {
@@ -162,20 +170,15 @@ public final class SHA224: SHA2_32bits {
             }
         }
         
-        // return a basic byte stream
-        return hashedBytes
-    }
-    
-    public var hashedBytes: [UInt8] {
-        var bytes = [UInt8]()
+        var resultBytes = [UInt8]()
         
         for hashPart in hashCode[0...6] {
             // Big Endian is required
             let hashPart = hashPart.bigEndian
-            bytes += [UInt8(hashPart & 0xff), UInt8((hashPart >> 8) & 0xff), UInt8((hashPart >> 16) & 0xff), UInt8((hashPart >> 24) & 0xff)]
+            resultBytes += [UInt8(hashPart & 0xff), UInt8((hashPart >> 8) & 0xff), UInt8((hashPart >> 16) & 0xff), UInt8((hashPart >> 24) & 0xff)]
         }
         
-        return bytes
+        return resultBytes
     }
 }
 
@@ -224,7 +227,15 @@ public final class SHA256: SHA2_32bits {
             sha2.process(bytes[start..<end])
         }
         
-        return sha2.hashedBytes
+        var resultBytes = [UInt8]()
+        
+        for hashPart in sha2.hashCode {
+            // Big Endian is required
+            let hashPart = hashPart.bigEndian
+            resultBytes += [UInt8(hashPart & 0xff), UInt8((hashPart >> 8) & 0xff), UInt8((hashPart >> 16) & 0xff), UInt8((hashPart >> 24) & 0xff)]
+        }
+        
+        return resultBytes
     }
     
     public func hash() throws -> [UInt8] {
@@ -266,19 +277,14 @@ public final class SHA256: SHA2_32bits {
             }
         }
         
-        // return a basic byte stream
-        return hashedBytes
-    }
-    
-    public var hashedBytes: [UInt8] {
-        var bytes = [UInt8]()
+        var resultBytes = [UInt8]()
         
         for hashPart in hashCode {
             // Big Endian is required
             let hashPart = hashPart.bigEndian
-            bytes += [UInt8(hashPart & 0xff), UInt8((hashPart >> 8) & 0xff), UInt8((hashPart >> 16) & 0xff), UInt8((hashPart >> 24) & 0xff)]
+            resultBytes += [UInt8(hashPart & 0xff), UInt8((hashPart >> 8) & 0xff), UInt8((hashPart >> 16) & 0xff), UInt8((hashPart >> 24) & 0xff)]
         }
         
-        return bytes
+        return resultBytes
     }
 }
