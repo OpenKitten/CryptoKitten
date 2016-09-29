@@ -15,7 +15,7 @@ public class HMAC<Variant: Hash> {
 
         - returns: The authenticated message
     */
-    public static func authenticate(_ message: [UInt8], key: [UInt8]) throws -> [UInt8] {
+    public static func authenticate(_ message: [UInt8], key: [UInt8]) -> [UInt8] {
         var key = key
         
         // If it's too long, hash it first
