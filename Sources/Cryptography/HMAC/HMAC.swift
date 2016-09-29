@@ -1,21 +1,21 @@
 /**
-    Used to authenticate messages using the `Variant` algorithm
-*/
+ Used to authenticate messages using the `Variant` algorithm
+ */
 public class HMAC<Variant: Hash> {
     /**
-        Create an HMAC authenticator.
-    */
+     Create an HMAC authenticator.
+     */
     public init() {}
-
+    
     /**
-        Authenticates a message using the provided `Hash` algorithm
-
-        - parameter message: The message to authenticate
-        - parameter key: The key to authenticate with
-
-        - returns: The authenticated message
-    */
-    public static func authenticate(_ message: [UInt8], key: [UInt8]) -> [UInt8] {
+     Authenticates a message using the provided `Hash` algorithm
+     
+     - parameter message: The message to authenticate
+     - parameter key: The key to authenticate with
+     
+     - returns: The authenticated message
+     */
+    public static func authenticate(_ message: [UInt8], withKey key: [UInt8]) -> [UInt8] {
         var key = key
         
         // If it's too long, hash it first
