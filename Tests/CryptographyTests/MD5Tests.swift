@@ -50,16 +50,12 @@ class MD5Tests: XCTestCase {
             )
         ]
 
-        for (i, test) in tests.enumerated() {
-            do {
-                let result = try HMAC<MD5>.authenticate(
-                    [UInt8](test.message.utf8),
-                    key: [UInt8](test.key.utf8)
+        for test in tests {
+            let result = HMAC<MD5>.authenticate(
+                message: [UInt8](test.message.utf8),
+                withKey: [UInt8](test.key.utf8)
                 ).hexString.lowercased()
-                XCTAssertEqual(result, test.expected.lowercased())
-            } catch {
-                XCTFail("Test \(i) failed: \(error)")
-            }
+            XCTAssertEqual(result, test.expected.lowercased())
         }
     }
 }

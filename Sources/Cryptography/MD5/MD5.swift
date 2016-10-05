@@ -1,11 +1,5 @@
 public final class MD5: StreamingHash {
-    public enum Error: Swift.Error {
-        case invalidByteCount
-        case switchError
-        case noStreamProvided
-    }
-
-    // MARK - MD5 Specific variables
+    /// MD5 hashes in blocks of 64 bytes
     public static let blockSize = 64
     
     private static let s: [UInt32] = [
@@ -15,9 +9,7 @@ public final class MD5: StreamingHash {
         6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21
     ]
 
-    /**
-        Creates a new MD5 capable of hasing a Stream.
-    */
+    /// Creates a new MD5 state capable of hasing a Stream of bytes (like a File) efficiently
     public init(_ s: ByteStream) {
         stream = s
         digest = []
@@ -56,6 +48,11 @@ public final class MD5: StreamingHash {
 
     // MARK - Hash Protocol
     
+    /// Hashes a message with MD5
+    ///
+    /// - parameter inputBytes: The data to hash
+    ///
+    /// - returns: The hashed bytes with a length of 16 bytes
     public static func hash(_ inputBytes: [UInt8]) -> [UInt8] {
         // Append an UInt8 with one bit
         var bytes = inputBytes + [0x80]
@@ -108,13 +105,14 @@ public final class MD5: StreamingHash {
         return result
     }
 
-    /**
-        Creates a hashed ByteStream from an input ByteStream
-        using the MD5 protocol.
-    */
+    /// Hashes all data in the stream chunk-by-chunk with MD5
+    ///
+    /// - throws: Stream errors
+    ///
+    /// - returns: The hashed bytes with a length of 16 bytes
     public func hash() throws -> [UInt8] {
         guard let stream = stream else {
-            throw MD5.Error.noStreamProvided
+            throw HashError.noStreamProvided
         }
         
         var count = 0
@@ -171,6 +169,7 @@ public final class MD5: StreamingHash {
     
     // MARK: Processing
 
+    /// Used for processing a single chunk of 64 bytes, not a byte more of less and updates the hash variables `a0`, `b0`, `c0` and `d0` appropriately
     private func process(_ bytes: ArraySlice<UInt8>) {
         if bytes.count != MD5.blockSize {
             fatalError("MD5 internal error - invalid block provided with size \(bytes.count)")

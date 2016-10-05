@@ -74,23 +74,18 @@ class SHA1Tests: XCTestCase {
             )
         ]
         
-        for (i, test) in tests.enumerated() {
-            do {
-                let result = try HMAC<SHA1>.authenticate(
-                    [UInt8](test.message.utf8),
-                    key: [UInt8](test.key.utf8)
+        for test in tests {
+            let result = HMAC<SHA1>.authenticate(
+                message: [UInt8](test.message.utf8),
+                withKey: [UInt8](test.key.utf8)
                 ).hexString.lowercased()
-                XCTAssertEqual(result, test.expected.lowercased())
-            } catch {
-                XCTFail("Test \(i) failed: \(error)")
-            }
+            XCTAssertEqual(result, test.expected.lowercased())
         }
         
         // Source: https://github.com/krzyzanowskim/CryptoSwift/blob/swift3-snapshots/CryptoSwiftTests/HMACTests.swift
         XCTAssertEqual(
-            try HMAC<SHA1>.authenticate([], key: []),
+            HMAC<SHA1>.authenticate(message: [], withKey: []),
             [0xfb,0xdb,0x1d,0x1b,0x18,0xaa,0x6c,0x08,0x32,0x4b,0x7d,0x64,0xb7,0x1f,0xb7,0x63,0x70,0x69,0x0e,0x1d]
         )
     }
-
 }

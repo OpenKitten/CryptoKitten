@@ -6,6 +6,7 @@ internal protocol SHA2_32bits: class, StreamingHash {
 }
 
 extension SHA2_32bits {
+    /// Used for processing a single chunk of 64 bytes, not a byte more of less and updates the `hashCode` appropriately
     internal func process(_ chunk: ArraySlice<UInt8>) {
         if chunk.count != Self.blockSize {
             fatalError("SHA1 internal error - invalid block provided with size \(chunk.count)")
@@ -96,6 +97,7 @@ public final class SHA224: SHA2_32bits {
         0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
         0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
         0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2]
+    
     
     public static func hash(_ inputBytes: [UInt8]) -> [UInt8] {
         var bytes = inputBytes + [0x80]
@@ -204,6 +206,11 @@ public final class SHA256: SHA2_32bits {
         0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
         0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2]
     
+    /// Hashes a message with SHA224
+    ///
+    /// - parameter inputBytes: The data to hash
+    ///
+    /// - returns: The hashed bytes with a length of 28 bytes
     public static func hash(_ inputBytes: [UInt8]) -> [UInt8] {
         var bytes = inputBytes + [0x80]
         var inputBlocks = inputBytes.count / blockSize
@@ -238,6 +245,11 @@ public final class SHA256: SHA2_32bits {
         return resultBytes
     }
     
+    /// Hashes all data in the provided stream chunk-by-chunk with SHA224
+    ///
+    /// - throws: Stream errors
+    ///
+    /// - returns: The hashed bytes with a length of 28 bytes
     public func hash() throws -> [UInt8] {
         guard let stream = stream else {
             throw HashError.noStreamProvided

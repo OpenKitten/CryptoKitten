@@ -6,6 +6,7 @@ internal protocol SHA2_64bits: class, StreamingHash {
 }
 
 extension SHA2_64bits {
+    /// Used for processing a single chunk of 128 bytes, not a byte more of less and updates the `hashCode` appropriately
     internal func process(_ chunk: ArraySlice<UInt8>) {
         if chunk.count != Self.blockSize {
             fatalError("SHA1 internal error - invalid block provided with size \(chunk.count)")
@@ -110,6 +111,11 @@ public final class SHA384: SHA2_64bits {
         0x431d67c49c100d4c, 0x4cc5d4becb3e42b6, 0x597f299cfc657e2a, 0x5fcb6fab3ad6faec, 0x6c44198c4a475817
     ]
     
+    /// Hashes a message with SHA384
+    ///
+    /// - parameter inputBytes: The data to hash
+    ///
+    /// - returns: The hashed bytes with a length of 48 bytes
     public static func hash(_ inputBytes: [UInt8]) -> [UInt8] {
         var bytes = inputBytes + [0x80]
         var inputBlocks = inputBytes.count / blockSize
@@ -133,9 +139,22 @@ public final class SHA384: SHA2_64bits {
             sha2.process(bytes[start..<end])
         }
         
-        return sha2.hashedBytes // TODO: Trunctuate
+        var resultBytes = [UInt8]()
+        
+        for hashPart in sha2.hashCode[0...5] {
+            // Big Endian is required
+            let hashPart = hashPart.bigEndian
+            resultBytes += [UInt8(hashPart & 0xff), UInt8((hashPart >> 8) & 0xff), UInt8((hashPart >> 16) & 0xff), UInt8((hashPart >> 24) & 0xff), UInt8((hashPart >> 32) & 0xff), UInt8((hashPart >> 40) & 0xff), UInt8((hashPart >> 48) & 0xff), UInt8((hashPart >> 56) & 0xff)]
+        }
+        
+        return resultBytes
     }
     
+    /// Hashes all data in the provided stream chunk-by-chunk with SHA384
+    ///
+    /// - throws: Stream errors
+    ///
+    /// - returns: The hashed bytes with a length of 48 bytes
     public func hash() throws -> [UInt8] {
         guard let stream = stream else {
             throw HashError.noStreamProvided
@@ -175,20 +194,15 @@ public final class SHA384: SHA2_64bits {
             }
         }
         
-        // return a basic byte stream
-        return hashedBytes
-    }
-    
-    public var hashedBytes: [UInt8] {
-        var bytes = [UInt8]()
+        var resultBytes = [UInt8]()
         
         for hashPart in hashCode[0...5] {
             // Big Endian is required
             let hashPart = hashPart.bigEndian
-            bytes += [UInt8(hashPart & 0xff), UInt8((hashPart >> 8) & 0xff), UInt8((hashPart >> 16) & 0xff), UInt8((hashPart >> 24) & 0xff), UInt8((hashPart >> 32) & 0xff), UInt8((hashPart >> 40) & 0xff), UInt8((hashPart >> 48) & 0xff), UInt8((hashPart >> 56) & 0xff)]
+            resultBytes += [UInt8(hashPart & 0xff), UInt8((hashPart >> 8) & 0xff), UInt8((hashPart >> 16) & 0xff), UInt8((hashPart >> 24) & 0xff), UInt8((hashPart >> 32) & 0xff), UInt8((hashPart >> 40) & 0xff), UInt8((hashPart >> 48) & 0xff), UInt8((hashPart >> 56) & 0xff)]
         }
         
-        return bytes
+        return resultBytes
     }
 }
 
@@ -227,6 +241,11 @@ public final class SHA512: SHA2_64bits {
         0x431d67c49c100d4c, 0x4cc5d4becb3e42b6, 0x597f299cfc657e2a, 0x5fcb6fab3ad6faec, 0x6c44198c4a475817
     ]
     
+    /// Hashes a message with SHA512
+    ///
+    /// - parameter inputBytes: The data to hash
+    ///
+    /// - returns: The hashed bytes with a length of 64 bytes
     public static func hash(_ inputBytes: [UInt8]) -> [UInt8] {
         var bytes = inputBytes + [0x80]
         var inputBlocks = inputBytes.count / blockSize
@@ -250,9 +269,23 @@ public final class SHA512: SHA2_64bits {
             sha2.process(bytes[start..<end])
         }
         
-        return sha2.hashedBytes
+        // Return the resulting bytes
+        var resultBytes = [UInt8]()
+        
+        for hashPart in sha2.hashCode {
+            // Big Endian is required
+            let hashPart = hashPart.bigEndian
+            resultBytes += [UInt8(hashPart & 0xff), UInt8((hashPart >> 8) & 0xff), UInt8((hashPart >> 16) & 0xff), UInt8((hashPart >> 24) & 0xff), UInt8((hashPart >> 32) & 0xff), UInt8((hashPart >> 40) & 0xff), UInt8((hashPart >> 48) & 0xff), UInt8((hashPart >> 56) & 0xff)]
+        }
+        
+        return resultBytes
     }
     
+    /// Hashes all data in the provided stream chunk-by-chunk with SHA512
+    ///
+    /// - throws: Stream errors
+    ///
+    /// - returns: The hashed bytes with a length of 64 bytes
     public func hash() throws -> [UInt8] {
         guard let stream = stream else {
             throw HashError.noStreamProvided
@@ -292,19 +325,15 @@ public final class SHA512: SHA2_64bits {
             }
         }
         
-        // return a basic byte stream
-        return hashedBytes
-    }
-    
-    public var hashedBytes: [UInt8] {
-        var bytes = [UInt8]()
+        // Return the resulting bytes
+        var resultBytes = [UInt8]()
         
         for hashPart in hashCode {
             // Big Endian is required
             let hashPart = hashPart.bigEndian
-            bytes += [UInt8(hashPart & 0xff), UInt8((hashPart >> 8) & 0xff), UInt8((hashPart >> 16) & 0xff), UInt8((hashPart >> 24) & 0xff), UInt8((hashPart >> 32) & 0xff), UInt8((hashPart >> 40) & 0xff), UInt8((hashPart >> 48) & 0xff), UInt8((hashPart >> 56) & 0xff)]
+            resultBytes += [UInt8(hashPart & 0xff), UInt8((hashPart >> 8) & 0xff), UInt8((hashPart >> 16) & 0xff), UInt8((hashPart >> 24) & 0xff), UInt8((hashPart >> 32) & 0xff), UInt8((hashPart >> 40) & 0xff), UInt8((hashPart >> 48) & 0xff), UInt8((hashPart >> 56) & 0xff)]
         }
         
-        return bytes
+        return resultBytes
     }
 }

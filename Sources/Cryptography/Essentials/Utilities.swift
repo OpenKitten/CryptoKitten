@@ -18,6 +18,28 @@ func arrayOfBytes<T>(_ value:T, length:Int? = nil) -> [UInt8] {
     return bytes
 }
 
+extension Int32 {
+    init(_ slice: ArraySlice<UInt8>, fromIndex index: Int? = nil) {
+        let index = index ?? slice.startIndex
+        
+        let val0 = Int32(slice[index.advanced(by: 3)]) << 24
+        let val1 = Int32(slice[index.advanced(by: 2)]) << 16
+        let val2 = Int32(slice[index.advanced(by: 1)]) << 8
+        let val3 = Int32(slice[index])
+        
+        self = val0 | val1 | val2 | val3
+    }
+    
+    init(_ data: [UInt8]) {
+        let val0 = Int32(data[3]) << 24
+        let val1 = Int32(data[2]) << 16
+        let val2 = Int32(data[1]) << 8
+        let val3 = Int32(data[0])
+        
+        self = val0 | val1 | val2 | val3
+    }
+}
+
 extension UInt32 {
     init(_ slice: ArraySlice<UInt8>, fromIndex index: Int? = nil) {
         let index = index ?? slice.startIndex
@@ -78,6 +100,16 @@ extension UInt64 {
 }
 
 func xor(_ lhs: [UInt8], _ rhs: [UInt8]) -> [UInt8] {
+    var result = [UInt8](repeating: 0, count: min(lhs.count, rhs.count))
+    
+    for i in 0..<result.count {
+        result[i] = lhs[i] ^ rhs[i]
+    }
+    
+    return result
+}
+
+func xor(_ lhs: ArraySlice<UInt8>, _ rhs: ArraySlice<UInt8>) -> [UInt8] {
     var result = [UInt8](repeating: 0, count: min(lhs.count, rhs.count))
     
     for i in 0..<result.count {

@@ -2,26 +2,35 @@ import Foundation
 
 public enum PBKDF2Error: Error {
     case cannotIterateZeroTimes
-    case cannotDeriveFromKey([UInt8])
+    case cannotDeriveFromPassword([UInt8])
     case cannotDeriveFromSalt([UInt8])
-    case keySizeTooBig(UInt)
+    case keySizeTooBig(Int)
 }
 
 public final class PBKDF2<Variant: Hash> {
-    public init() { }
-
-    /// Used to make the block number
-    /// Credit to Marcin Krzyzanowski
-    private static func integerBytes(blockNum block: UInt32) -> [UInt8] {
-        var bytes = [UInt8](repeating: 0, count: 4)
-        bytes[0] = UInt8((block >> 24) & 0xFF)
-        bytes[1] = UInt8((block >> 16) & 0xFF)
-        bytes[2] = UInt8((block >> 8) & 0xFF)
-        bytes[3] = UInt8(block & 0xFF)
-        return bytes
-    }
-    
-    public static func derive(fromKey key: [UInt8], usingSalt salt: [UInt8], iterating iterations: Int, keyLength keySize: UInt? = nil) throws -> [UInt8] {
+    /// Derives a key from a given set of parameters
+    ///
+    /// - parameter password: The password to hash
+    /// - parameter salt: The random salt that should be unique to the user's credentials, used for preventing Rainbow Tables
+    /// - parameter iterations: The amount of iterations to use for strengthening the key, higher is stronger/safer but also slower
+    /// - parameter keySize: The amount of bytes to output
+    ///
+    /// - throws: Invalid input bytes for password or salt
+    /// - throws: Too large amount of key bytes requested
+    /// - throws: Too little iterations
+    ///
+    /// - returns: The derived key bytes
+    public static func derive(fromPassword password: [UInt8], usingSalt salt: [UInt8], iterating iterations: Int = 10_000, derivedKeyLength keySize: Int? = nil) throws -> [UInt8] {
+        
+        // Used to create a block number to append to the salt before deriving
+        func integerBytes(blockNum block: UInt32) -> [UInt8] {
+            var bytes = [UInt8](repeating: 0, count: 4)
+            bytes[0] = UInt8((block >> 24) & 0xFF)
+            bytes[1] = UInt8((block >> 16) & 0xFF)
+            bytes[2] = UInt8((block >> 8) & 0xFF)
+            bytes[3] = UInt8(block & 0xFF)
+            return bytes
+        }
         
         // Authenticated using HMAC with precalculated keys (saves 50% performance)
         func authenticate(innerPadding: [UInt8], outerPadding: [UInt8], message: [UInt8]) throws -> [UInt8] {
@@ -31,51 +40,51 @@ public final class PBKDF2<Variant: Hash> {
             return outerPaddingHash
         }
         
-        let keySize = keySize ?? UInt(Variant.blockSize)
+        let keySize = keySize ?? Variant.blockSize
         
         // Check input values to be correct
         guard iterations > 0 else {
             throw PBKDF2Error.cannotIterateZeroTimes
         }
         
-        guard key.count > 0 else {
-            throw PBKDF2Error.cannotDeriveFromKey(key)
+        guard password.count > 0 else {
+            throw PBKDF2Error.cannotDeriveFromPassword(password)
         }
         
         guard salt.count > 0 else {
             throw PBKDF2Error.cannotDeriveFromSalt(salt)
         }
         
-        guard keySize <= UInt(((pow(2,32) as Double) - 1) * Double(Variant.blockSize)) else {
+        guard keySize <= Int(((pow(2,32) as Double) - 1) * Double(Variant.blockSize)) else {
             throw PBKDF2Error.keySizeTooBig(keySize)
         }
         
         // MARK - Precalculate paddings
-        var key = key
+        var password = password
         
-        // If it's too long, hash it first
-        if key.count > Variant.blockSize {
-            key = Variant.hash(key)
+        // If the key is too long, hash it first
+        if password.count > Variant.blockSize {
+            password = Variant.hash(password)
         }
         
         // Add padding
-        if key.count < Variant.blockSize {
-            key = key + [UInt8](repeating: 0, count: Variant.blockSize - key.count)
+        if password.count < Variant.blockSize {
+            password = password + [UInt8](repeating: 0, count: Variant.blockSize - password.count)
         }
         
         // XOR the information
         var outerPadding = [UInt8](repeating: 0x5c, count: Variant.blockSize)
         var innerPadding = [UInt8](repeating: 0x36, count: Variant.blockSize)
         
-        for i in 0..<key.count {
-            outerPadding[i] = key[i] ^ outerPadding[i]
+        for i in 0..<password.count {
+            outerPadding[i] = password[i] ^ outerPadding[i]
         }
         
-        for i in 0..<key.count {
-            innerPadding[i] = key[i] ^ innerPadding[i]
+        for i in 0..<password.count {
+            innerPadding[i] = password[i] ^ innerPadding[i]
         }
         
-        // MARK - The hashing process
+        // This is where all the processing happens
         let blocks = UInt32(ceil(Double(keySize) / Double(Variant.blockSize)))
         var response = [UInt8]()
         
@@ -100,8 +109,8 @@ public final class PBKDF2<Variant: Hash> {
         return response
     }
     
-    public static func validate(key: [UInt8], usingSalt salt: [UInt8], against: [UInt8], iterating iterations: Int) throws -> Bool {
-        let newHash = try derive(fromKey: key, usingSalt: salt, iterating: iterations, keyLength: UInt(against.count))
+    public static func validate(password: [UInt8], usingSalt salt: [UInt8], against: [UInt8], iterating iterations: Int) throws -> Bool {
+        let newHash = try derive(fromPassword: password, usingSalt: salt, iterating: iterations, derivedKeyLength: against.count)
         
         return newHash == against
     }

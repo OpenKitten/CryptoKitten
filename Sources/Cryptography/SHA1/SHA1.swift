@@ -1,38 +1,29 @@
 public final class SHA1: StreamingHash {
-    private var hashCode: [UInt32]
+    private var hashCode: [UInt32] = [
+        0x67452301,
+        0xEFCDAB89,
+        0x98BADCFE,
+        0x10325476,
+        0xC3D2E1F0
+    ]
+    
     private var stream: ByteStream? = nil
     
-    /**
-        Create a new SHA1 capable of hashing a Stream.
-    */
+    /// Creates a new SHA1 state capable of hasing a Stream of bytes (like a File) efficiently
     public init(_ s: ByteStream) {
         stream = s
-        hashCode = [
-            0x67452301,
-            0xEFCDAB89,
-            0x98BADCFE,
-            0x10325476,
-            0xC3D2E1F0
-        ]
     }
     
-    internal init() {
-        hashCode = [
-            0x67452301,
-            0xEFCDAB89,
-            0x98BADCFE,
-            0x10325476,
-            0xC3D2E1F0
-        ]
-    }
-
-    // MARK - Hash Protocol
-
-    /**
-        SHA1 uses a block size of 64.
-    */
+    internal init() {}
+    
+    /// SHA1 hashes in blocks of 64 bytes
     public static let blockSize = 64
     
+    /// Hashes a message with SHA1
+    ///
+    /// - parameter inputBytes: The data to hash
+    ///
+    /// - returns: The hashed bytes with a length of 20 bytes
     public static func hash(_ inputBytes: [UInt8]) -> [UInt8] {
         var bytes = inputBytes + [0x80]
         let remainingBytes = blockSize - (bytes.count % blockSize)
@@ -68,10 +59,11 @@ public final class SHA1: StreamingHash {
         return resultBytes
     }
 
-    /**
-        Create a hashed ByteStream from an input ByteStream
-        using the SHA1 protocol.
-    */
+    /// Hashes all data in the provided stream chunk-by-chunk with SHA1
+    ///
+    /// - throws: Stream errors
+    ///
+    /// - returns: The hashed bytes with a length of 20 bytes
     public func hash() throws -> [UInt8] {
         guard let stream = stream else {
             throw HashError.noStreamProvided
@@ -123,18 +115,7 @@ public final class SHA1: StreamingHash {
         return resultBytes
     }
 
-    // MARK: Processing
-
-    private func convert(_ int: UInt32) -> [UInt8] {
-        let int = int.bigEndian
-        return [
-            UInt8(int & 0xff),
-            UInt8((int >> 8) & 0xff),
-            UInt8((int >> 16) & 0xff),
-            UInt8((int >> 24) & 0xff)
-        ]
-    }
-
+    /// Used for processing a single chunk of 64 bytes, not a byte more of less and updates the `hashCode` appropriately
     private func process(_ bytes: ArraySlice<UInt8>) {
         if bytes.count != SHA1.blockSize {
             fatalError("SHA1 internal error - invalid block provided with size \(bytes.count)")
