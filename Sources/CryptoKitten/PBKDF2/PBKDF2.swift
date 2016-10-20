@@ -85,7 +85,7 @@ public final class PBKDF2<Variant: Hash> {
         }
         
         // This is where all the processing happens
-        let blocks = UInt32(ceil(Double(keySize) / Double(Variant.blockSize)))
+        let blocks = UInt32((keySize + Variant.digestSize - 1) / Variant.digestSize)
         var response = [UInt8]()
         
         // Loop over all blocks
@@ -106,7 +106,7 @@ public final class PBKDF2<Variant: Hash> {
             response.append(contentsOf: ui)
         }
         
-        return response
+        return Array(response[0..<keySize])
     }
     
     public static func validate(password: [UInt8], usingSalt salt: [UInt8], against: [UInt8], iterating iterations: Int) throws -> Bool {

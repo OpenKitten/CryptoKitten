@@ -18,6 +18,7 @@ public final class SHA1: StreamingHash {
     
     /// SHA1 hashes in blocks of 64 bytes
     public static let blockSize = 64
+    public static var digestSize = 20
     
     /// Hashes a message with SHA1
     ///

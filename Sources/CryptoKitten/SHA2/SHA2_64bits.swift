@@ -87,6 +87,7 @@ public final class SHA384: SHA2_64bits {
     }
     
     public static var blockSize = 128
+    public static var digestSize = 48
     
     internal var hashCode: [UInt64] = [
         0xcbbb9d5dc1059ed8, 0x629a292a367cd507, 0x9159015a3070dd17, 0x152fecd8f70e5939, 0x67332667ffc00b31, 0x8eb44a8768581511, 0xdb0c2e0d64f98fa7, 0x47b5481dbefa4fa4
@@ -216,6 +217,7 @@ public final class SHA512: SHA2_64bits {
     }
     
     public static var blockSize = 128
+    public static var digestSize = 64
     
     internal var hashCode: [UInt64] = [
         0x6a09e667f3bcc908, 0xbb67ae8584caa73b, 0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,

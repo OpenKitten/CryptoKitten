@@ -1,5 +1,6 @@
 public protocol Hash {
     static var blockSize: Int { get }
+    static var digestSize: Int { get }
     
     static func hash(_ bytes: [UInt8]) -> [UInt8]
 }

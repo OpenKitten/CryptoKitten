@@ -2,6 +2,8 @@ public final class MD5: StreamingHash {
     /// MD5 hashes in blocks of 64 bytes
     public static let blockSize = 64
     
+    public static var digestSize = 16
+    
     private static let s: [UInt32] = [
         7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,
         5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,

@@ -1,5 +1,5 @@
 import XCTest
-import Cryptography
+import CryptoKitten
 
 class MD5Tests: XCTestCase {
     static var allTests = [

@@ -1,6 +1,6 @@
 import XCTest
-@testable import CryptographyTests
+@testable import CryptoKittenTests
 
 XCTMain([
-    testCase(CryptographyTests.allTests),
+    testCase(CryptoKittenTests.allTests),
 ])

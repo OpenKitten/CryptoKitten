@@ -113,7 +113,7 @@ func xor(_ lhs: ArraySlice<UInt8>, _ rhs: ArraySlice<UInt8>) -> [UInt8] {
     var result = [UInt8](repeating: 0, count: min(lhs.count, rhs.count))
     
     for i in 0..<result.count {
-        result[i] = lhs[i] ^ rhs[i]
+        result[i] = lhs[lhs.startIndex.advanced(by: i)] ^ rhs[rhs.startIndex.advanced(by: i)]
     }
     
     return result
