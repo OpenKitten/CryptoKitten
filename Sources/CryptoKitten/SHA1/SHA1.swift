@@ -178,13 +178,13 @@ public final class SHA1: StreamingHash {
             b = a
             a = temp
         }
-
-        hashCode = [
-            (hashCode[0] &+ a) & 0xffffffff,
-            (hashCode[1] &+ b) & 0xffffffff,
-            (hashCode[2] &+ c) & 0xffffffff,
-            (hashCode[3] &+ d) & 0xffffffff,
-            (hashCode[4] &+ e) & 0xffffffff
-        ]
+        
+        let hashA = (hashCode[0] &+ a) & 0xffffffff
+        let hashB = (hashCode[1] &+ b) & 0xffffffff
+        let hashC = (hashCode[2] &+ c) & 0xffffffff
+        let hashD = (hashCode[3] &+ d) & 0xffffffff
+        let hashE = (hashCode[4] &+ e) & 0xffffffff
+        
+        hashCode = [hashA, hashB, hashC, hashD, hashE]
     }
 }
