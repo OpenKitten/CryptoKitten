@@ -40,7 +40,7 @@ public final class PBKDF2<Variant: Hash> {
             return outerPaddingHash
         }
         
-        let keySize = keySize ?? Variant.blockSize
+        let keySize = keySize ?? Variant.digestSize
         
         // Check input values to be correct
         guard iterations > 0 else {
