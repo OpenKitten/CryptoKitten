@@ -28,7 +28,7 @@ public final class SHA1: StreamingHash {
     public static func hash(_ inputBytes: [UInt8]) -> [UInt8] {
         var bytes = inputBytes + [0x80]
         let remainingBytes = blockSize - (bytes.count % blockSize)
-        var inputBlocks = (bytes.count / blockSize) + (remainingBytes > blockSize - 8 ? 0 : 1)
+        var inputBlocks = (bytes.count / blockSize) + (remainingBytes == blockSize - 8 ? 0 : 1)
         
         if remainingBytes != 8 {
             if remainingBytes < 8 {
