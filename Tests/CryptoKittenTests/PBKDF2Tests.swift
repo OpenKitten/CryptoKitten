@@ -10,9 +10,9 @@ class PBKDF2Tests: XCTestCase {
     ]
     
     func testValidation() throws {
-        let result = try PBKDF2<SHA1>.derive(fromPassword: [UInt8]("vapor".utf8), usingSalt: [UInt8]("V4P012".utf8), iterating: 1000, derivedKeyLength: 10)
+        let result = try PBKDF2<SHA1>.deriveKey(fromPassword: [UInt8]("vapor".utf8), saltedWith: [UInt8]("V4P012".utf8), iteratingTimes: 1000, derivedKeyLength: 10)
         
-        XCTAssert(try PBKDF2<SHA1>.validate(password: [UInt8]("vapor".utf8), usingSalt: [UInt8]("V4P012".utf8), against: result, iterating: 1000))
+        XCTAssert(try PBKDF2<SHA1>.validate(password: [UInt8]("vapor".utf8), saltedWith: [UInt8]("V4P012".utf8), against: result, iterating: 1000))
     }
 
     func testSHA1() throws {
@@ -25,7 +25,7 @@ class PBKDF2Tests: XCTestCase {
         ]
         
         for test in tests {
-            let result = try PBKDF2<SHA1>.derive(fromPassword: [UInt8](test.key.utf8), usingSalt: [UInt8](test.salt.utf8), iterating: test.iterations).hexString.lowercased()
+            let result = try PBKDF2<SHA1>.deriveKey(fromPassword: [UInt8](test.key.utf8), saltedWith: [UInt8](test.salt.utf8), iteratingTimes: test.iterations).hexString.lowercased()
             
             XCTAssertEqual(result, test.expected.lowercased())
         }
@@ -41,7 +41,7 @@ class PBKDF2Tests: XCTestCase {
         ]
         
         for test in tests {
-            let result = try PBKDF2<MD5>.derive(fromPassword: [UInt8](test.key.utf8), usingSalt: [UInt8](test.salt.utf8), iterating: test.iterations).hexString.lowercased()
+            let result = try PBKDF2<MD5>.deriveKey(fromPassword: [UInt8](test.key.utf8), saltedWith: [UInt8](test.salt.utf8), iteratingTimes: test.iterations).hexString.lowercased()
             
             XCTAssertEqual(result, test.expected.lowercased())
         }
@@ -50,7 +50,7 @@ class PBKDF2Tests: XCTestCase {
     func testPerformance() {
         // ~0.137 release
         measure {
-            _ = try! PBKDF2<SHA1>.derive(fromPassword: [UInt8]("p".utf8), usingSalt: [UInt8]("somewhatlongsaltstringthatIwanttotest".utf8), iterating: 10_000)
+            _ = try! PBKDF2<SHA1>.deriveKey(fromPassword: [UInt8]("p".utf8), saltedWith: [UInt8]("somewhatlongsaltstringthatIwanttotest".utf8), iteratingTimes: 10_000)
         }
     }
 }

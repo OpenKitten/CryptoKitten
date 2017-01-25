@@ -59,6 +59,12 @@ class SHA1Tests: XCTestCase {
             _ = SHA1.hash([UInt8]("kaas".utf8))
         }
     }
+    
+    func testNotCrashing() {
+        let data = [UInt8](repeating: 0x02, count: 263)
+        
+        _ = SHA1.hash(data)
+    }
 
     func testHMAC() throws {
         let tests: [(key: String, message: String, expected: String)] = [
