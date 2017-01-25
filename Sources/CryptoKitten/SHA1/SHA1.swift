@@ -30,7 +30,7 @@ public final class SHA1: StreamingHash {
         let remainingBytes = blockSize - (bytes.count % blockSize)
         var inputBlocks = (bytes.count / blockSize) + (remainingBytes == blockSize - 8 ? 0 : 1)
         
-        if remainingBytes != 8 {
+        if remainingBytes != 56 {
             if remainingBytes < 8 {
                 inputBlocks += 1
             }
