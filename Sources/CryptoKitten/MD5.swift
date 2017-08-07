@@ -31,8 +31,11 @@ fileprivate let k: [UInt32] = [ 0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
 
 fileprivate let chunkSize = 64
 
-public final class MD5 {
-    // The hash
+public final class MD5 : Hash {
+    public static var littleEndian = true
+    public static let chunkSize = 64
+    
+    // The initial hash
     var a0: UInt32 = 0x67452301
     var b0: UInt32 = 0xefcdab89
     var c0: UInt32 = 0x98badcfe
@@ -48,18 +51,12 @@ public final class MD5 {
     var g: Int = 0
     var Mg: UInt32 = 0
     
-    var remainder = UnsafeMutablePointer<UInt8>.allocate(capacity: 63)
-    var containedRemainder = 0
-    var totalLength: UInt64 = 0
+    public var remainder = UnsafeMutablePointer<UInt8>.allocate(capacity: 63)
+    public var containedRemainder = 0
+    public var totalLength: UInt64 = 0
     
     public init() {
-        remainder.initialize(to: 0, count: 63)
-    }
-    
-    public static func hash(_ array: [UInt8]) -> [UInt8] {
-        return array.withUnsafeBufferPointer { buffer in
-            return hash(buffer)
-        }
+        remainder.initialize(to: 0, count: 64)
     }
     
     public var hash: [UInt8] {
@@ -84,76 +81,21 @@ public final class MD5 {
         return buffer
     }
     
-    public static func hash(_ buffer: UnsafeBufferPointer<UInt8>) -> [UInt8] {
-        let md5 = MD5()
-        md5.finalize(buffer)
-        return md5.hash
-    }
-    
-    public func update(_ buffer: UnsafeBufferPointer<UInt8>) {
-        totalLength = totalLength &+ UInt64(buffer.count)
-        
-        var buffer = buffer
-        
-        if containedRemainder > 0 {
-            let needed = chunkSize &- containedRemainder
-            
-            guard let bufferPointer = buffer.baseAddress else {
-                assertionFailure("Invalid buffer provided")
-                return
-            }
-            
-            if buffer.count >= needed {
-                memcpy(remainder.advanced(by: containedRemainder), bufferPointer, needed)
-                
-                buffer = UnsafeBufferPointer(start: bufferPointer.advanced(by: needed), count: buffer.count &- needed)
-            } else {
-                memcpy(remainder.advanced(by: containedRemainder), bufferPointer, buffer.count)
-                return
-            }
-        }
-        
-        guard var bufferPointer = buffer.baseAddress else {
-            assertionFailure("Invalid buffer provided")
-            return
-        }
-        
-        var bufferSize = buffer.count
-        
-        while bufferSize >= 64 {
-            defer {
-                bufferPointer = bufferPointer.advanced(by: 64)
-                bufferSize = bufferSize &- 64
-            }
-            
-            update(pointer: bufferPointer)
-        }
-        
-        memcpy(remainder, bufferPointer, bufferSize)
-        containedRemainder = bufferSize
-    }
-    
-    public func update(array: inout [UInt8]) {
-        array.withUnsafeBufferPointer { buffer in
-            update(buffer)
-        }
-    }
-    
-    fileprivate func update(pointer: UnsafePointer<UInt8>) {
+    public func update(pointer: UnsafePointer<UInt8>) {
         a1 = a0
         b1 = b0
         c1 = c0
         d1 = d0
         
-        for i in 0..<64 {
+        for i in 0...63 {
             switch i {
-            case 0..<16:
+            case 0...15:
                 F = (b1 & c1) | ((~b1) & d1)
                 g = i
-            case 16..<32:
+            case 16...31:
                 F = (d1 & b1) | ((~d1) & c1)
                 g = (5 &* i &+ 1) % 16
-            case 32..<48:
+            case 32...47:
                 F = b1 ^ c1 ^ d1
                 g = (3 &* i &+ 5) % 16
             default:
@@ -174,46 +116,6 @@ public final class MD5 {
         b0 = b0 &+ b1
         c0 = c0 &+ c1
         d0 = d0 &+ d1
-    }
-    
-    public func finalize(_ buffer: UnsafeBufferPointer<UInt8>) {
-        let totalRemaining = containedRemainder + buffer.count + 1
-        totalLength = totalLength &+ UInt64(buffer.count)
-        
-        var zeroes = 56 &- (totalRemaining % 64)
-        
-        if zeroes > 56 {
-            // Append another chunk of zeroes if we have more than 448 bits
-            zeroes = (64 &+ (56 &- zeroes)) &+ zeroes
-        }
-        
-        if zeroes < 0 {
-            zeroes =  (8 &+ zeroes) + 56
-        }
-        
-        var length = [UInt8](repeating: 0, count: 8)
-        totalLength = totalLength &* 8
-        _ = length.withUnsafeMutableBytes { length in
-            memcpy(length.baseAddress!, &totalLength, 8)
-        }
-        
-        let lastBlocks = Array(buffer) + [0x80] + [UInt8](repeating: 0, count: zeroes) + length
-        var offset = 0
-        
-        lastBlocks.withUnsafeBufferPointer { buffer in
-            let pointer = buffer.baseAddress!
-            
-            while offset < buffer.count {
-                defer { offset = offset &+ 64 }
-                self.update(pointer: pointer.advanced(by: offset))
-            }
-        }
-    }
-    
-    public func finalize(array: inout [UInt8]) {
-        return array.withUnsafeBufferPointer { buffer in
-            self.finalize(buffer)
-        }
     }
 }
 
