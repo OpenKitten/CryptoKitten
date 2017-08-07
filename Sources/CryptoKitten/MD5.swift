@@ -32,8 +32,9 @@ fileprivate let k: [UInt32] = [ 0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
 fileprivate let chunkSize = 64
 
 public final class MD5 : Hash {
-    public static var littleEndian = true
+    public static let littleEndian = true
     public static let chunkSize = 64
+    public static let digestSize = 16
     
     // The initial hash
     var a0: UInt32 = 0x67452301

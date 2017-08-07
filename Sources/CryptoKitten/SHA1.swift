@@ -1,4 +1,5 @@
 public final class SHA1 : Hash {
+    public static let digestSize = 20
     public static let chunkSize = 64
     public static let littleEndian = false
     

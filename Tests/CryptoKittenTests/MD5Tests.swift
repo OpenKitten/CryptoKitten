@@ -5,7 +5,7 @@ class MD5Tests: XCTestCase {
     static var allTests = [
         ("testBasic", testBasic),
         ("testPerformance", testPerformance),
-//        ("testHMAC", testHMAC),
+        ("testHMAC", testHMAC),
     ]
 
     func testBasic() throws {
@@ -35,27 +35,26 @@ class MD5Tests: XCTestCase {
         }
     }
 
-//
-//    func testHMAC() throws {
-//        let tests: [(key: String, message: String, expected: String)] = [
-//            (
-//                "vapor",
-//                "hello",
-//                "bbd98ab1dbed72cdf3e924ae7eaf7943"
-//            ),
-//            (
-//                "true",
-//                "2+2=4",
-//                "37bda9a2b521d4623883b3acb7d9c3f7"
-//            )
-//        ]
-//
-//        for test in tests {
-//            let result = HMAC<MD5>.authenticate(
-//                message: [UInt8](test.message.utf8),
-//                withKey: [UInt8](test.key.utf8)
-//                ).hexString.lowercased()
-//            XCTAssertEqual(result, test.expected.lowercased())
-//        }
-//    }
+    func testHMAC() throws {
+        let tests: [(key: String, message: String, expected: String)] = [
+            (
+                "vapor",
+                "hello",
+                "bbd98ab1dbed72cdf3e924ae7eaf7943"
+            ),
+            (
+                "true",
+                "2+2=4",
+                "37bda9a2b521d4623883b3acb7d9c3f7"
+            )
+        ]
+
+        for test in tests {
+            let result = HMAC<MD5>.authenticate(
+                [UInt8](test.message.utf8),
+                withKey: [UInt8](test.key.utf8)
+                ).hexString.lowercased()
+            XCTAssertEqual(result, test.expected.lowercased())
+        }
+    }
 }

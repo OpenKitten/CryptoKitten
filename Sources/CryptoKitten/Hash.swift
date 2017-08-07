@@ -3,6 +3,7 @@ import Foundation
 public protocol Hash : class {
     /// The amount of processed bytes per chunk
     static var chunkSize: Int { get }
+    static var digestSize: Int { get }
     static var littleEndian: Bool { get }
     
     /// The current length of hashes bytes in bits
