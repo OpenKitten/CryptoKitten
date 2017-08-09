@@ -64,17 +64,6 @@ public final class SHA1 : Hash {
             w.append(leftRotate(w[i &- 3] ^ w[i &- 8] ^ w[i &- 14] ^ w[i &- 16], count: 1))
         }
         
-//        var w = [UInt32](repeating: 0, count: 80)
-//
-//        for i in 0...79 {
-//            switch i {
-//            case 0...15:
-//                w[i] = pointer.advanced(by: i &* 4).withMemoryRebound(to: UInt32.self, capacity: 1, { $0.pointee.bigEndian })
-//            default:
-//                w[i] = leftRotate(w[i &- 3] ^ w[i &- 8] ^ w[i &- 14] ^ w[i &- 16], count: 1)
-//            }
-//        }
-        
         a = h0
         b = h1
         c = h2
