@@ -56,6 +56,17 @@ public final class MD5 : Hash {
     public var containedRemainder = 0
     public var totalLength: UInt64 = 0
     
+    deinit {
+        self.remainder.deallocate(capacity: 63)
+    }
+    
+    public func reset() {
+        a0 = 0x67452301
+        b0 = 0xefcdab89
+        c0 = 0x98badcfe
+        d0 = 0x10325476
+    }
+    
     public init() {
         remainder.initialize(to: 0, count: 64)
     }

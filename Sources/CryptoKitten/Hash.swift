@@ -18,6 +18,8 @@ public protocol Hash : class {
     /// Updates the hash using exactly one `chunkSize` of bytes referenced by a pointer
     func update(pointer: UnsafePointer<UInt8>)
     
+    func reset()
+    
     init()
 }
 

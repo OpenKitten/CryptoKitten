@@ -23,6 +23,18 @@ public final class SHA1 : Hash {
     public var containedRemainder = 0
     public var totalLength: UInt64 = 0
     
+    public func reset() {
+        h0 = 0x67452301
+        h1 = 0xEFCDAB89
+        h2 = 0x98BADCFE
+        h3 = 0x10325476
+        h4 = 0xC3D2E1F0
+    }
+    
+    deinit {
+        self.remainder.deallocate(capacity: 63)
+    }
+    
     public var hash: [UInt8] {
         var buffer = [UInt8]()
         buffer.reserveCapacity(20)
